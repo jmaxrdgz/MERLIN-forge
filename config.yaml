@@ -1,0 +1,49 @@
+input:
+  expected_shape_last_dim: 2
+  dtype: float32
+
+merlin:
+  model_name: spotlight
+  device: cpu
+  symetrise: true
+  patch_size: 256
+  stride_size: 254
+  output_kind: amplitude
+  input_format: auto
+
+adaptive_quantization:
+  bins: 512
+  mode_range_percentiles: [1.0, 99.5]
+  alpha_weak: 3
+  alpha_strong: 1.1
+  clip_percentiles: [0.0, 99.9]
+  clip_max: null
+  weak_mapping:
+    out_min: 0.0
+    out_split: 0.5
+    out_max: 1.0
+  strong_mapping:
+    out_min: 0.0
+    out_split: 0.5
+    out_max: 1.0
+
+output:
+  layout: CHW
+  dtype: float32
+  uint16:
+    range_mode: use_output_endpoints
+    clamp: true
+    endpoints:
+      - [0.0, 1.0]  # merlin channel expected range
+      - [0.0, 1.0]  # weak mapping range
+      - [0.0, 1.0]  # strong mapping range
+
+viz:
+  show_hist: true
+  hist_clip_percentiles: [1.0, 99.5]
+  overlay_channel_hists: true
+  log_scale: true
+
+bench:
+  warmup: 5
+  iters: 50
