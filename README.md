@@ -2,6 +2,10 @@
 
 MERLIN-forge converts a single complex SAR SLC stored as `.npy` (shape `[H, W, 2]`, real/imag) into a 3-channel amplitude representation for downstream detection models. It computes amplitude once per sample and generates three channels: MERLIN-despeckled amplitude, weak-scatter enhancement, and strong-scatter enhancement.
 
+<img width="1408" height="768" alt="Gemini_Generated_Image_uc8ffzuc8ffzuc8f" src="https://github.com/user-attachments/assets/7d5a900c-93db-4280-b96f-04c659713a1e" />
+
+This work is inspired from channel enhancement and combination (Suo et al., 2024) using Merlin (Dalsasso et al., 2022) as the despeckler for distribution and ease of use purposes. 
+
 ## Setup
 
 1) Create and activate a conda environment (Python >= 3.10):
@@ -36,3 +40,15 @@ Running this on Mac creates some issues, managed to bypass them adding ```(KMP_D
 ```bash
 python -m merlin_forge.bench --config config.yaml --input_dir path/to/dir --n 50
 ```
+
+## Todo
+
+- [ ] Test experiments and baseline comparison
+- [ ] Reduce inference time
+- [ ] Serve as a plug-and-play package
+
+## References
+
+* **MERLIN Despeckling:** Y. Suo, Y. Wu, T. Miao, W. Diao, X. Sun and K. Fu, "Adaptive SAR Image Enhancement for Aircraft Detection via Speckle Suppression and Channel Combination," in IEEE Transactions on Geoscience and Remote Sensing, vol. 62, pp. 1-15, 2024, Art no. 5219415. DOI: 10.1109/TGRS.2024.3435881
+* **Channel Enhancement:** E. Dalsasso, L. Denis and F. Tupin, "As if by Magic: Self-Supervised Training of Deep Despeckling Networks with MERLIN," in IEEE Transactions on Geoscience and Remote Sensing, vol. 60, pp. 1-13, 2022, Art no. 5236213. DOI: 10.1109/TGRS.2021.3128621
+
