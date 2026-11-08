@@ -62,14 +62,14 @@ Each method used a frozen ImageNet-pretrained ResNet-18 and a separately fitted 
 
 ### Vessel detection
 
-Each method fine-tuned YOLO11n for 10 epochs at 320×320 with the same initial weights, splits, and seed. The OpenSAR Insight evaluation used 196 held-out tiles from three scenes with 236 labeled boxes. Precision and recall are reported at each model's max-F1 operating point. The two F1 columns use fixed confidence thresholds and one-to-one matches at IoU ≥ 0.50.
+Each method fine-tuned YOLO11n for 10 epochs at 320×320 with the same initial weights, splits, and seed. The OpenSAR Insight evaluation used 196 held-out tiles from three scenes with 236 labeled boxes. Precision and recall are reported at each model's max-F1 operating point. F1 @ 0.30 uses a confidence threshold of 0.30 and one-to-one matches at IoU ≥ 0.50.
 
-| Method | mAP50 % | mAP50–95 % | Precision % | Recall % | F1 @ 0.30 % | F1 @ 0.50 % |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Magnitude | **53.2** | **19.2** | **80.9** | 48.4 | 59.54 | **59.56** |
-| Gaussian + scatter channels | 48.2 | 15.6 | 74.3 | 47.0 | 57.45 | 54.70 |
-| MERLIN only | 50.9 | 17.5 | 69.2 | 49.5 | 57.75 | 50.00 |
-| MERLIN-forge | 50.3 | 16.1 | 73.8 | **52.5** | **60.87** | 57.53 |
+| Method | mAP50 % | mAP50–95 % | Precision % | Recall % | F1 @ 0.30 % |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Magnitude | **53.2** | **19.2** | **80.9** | 48.4 | 59.54 |
+| Gaussian + scatter channels | 48.2 | 15.6 | 74.3 | 47.0 | 57.45 |
+| MERLIN only | 50.9 | 17.5 | 69.2 | 49.5 | 57.75 |
+| MERLIN-forge | 50.3 | 16.1 | 73.8 | **52.5** | **60.87** |
 
 See the [experiment documentation](experiments/README.md) for the full protocol, uncertainty estimates, and reproduction commands.
 
