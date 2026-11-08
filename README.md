@@ -47,7 +47,7 @@ We compared four three-channel inputs derived from the same complex SAR chips. T
 
 ### Classification
 
-Each method used a frozen ImageNet-pretrained ResNet-18 and a separately fitted logistic regression probe, with matched splits and training settings. OpenSARShip used a scene-based split (1,497 train, 780 test). MSTAR SOC used the standard 17° training and 15° test split (2,747 train, 2,425 test).
+Each method used a frozen ImageNet-pretrained ResNet-18 and a separately fitted logistic regression probe, with matched splits and training settings. OpenSARShip used a scene-based split (1,497 train, 780 test).
 
 | Dataset | Method | Accuracy % | Macro-F1 % |
 | --- | --- | ---: | ---: |
@@ -55,10 +55,6 @@ Each method used a frozen ImageNet-pretrained ResNet-18 and a separately fitted 
 | OpenSARShip | Gaussian + scatter channels | 68.5 | 34.5 |
 | OpenSARShip | MERLIN only | 69.9 | 35.7 |
 | OpenSARShip | MERLIN-forge | **70.4** | **35.8** |
-| MSTAR SOC | Magnitude | **71.3** | **70.6** |
-| MSTAR SOC | Gaussian + scatter channels | 67.5 | 66.8 |
-| MSTAR SOC | MERLIN only | 36.5 | 33.5 |
-| MSTAR SOC | MERLIN-forge | 61.3 | 60.2 |
 
 ### Vessel detection
 

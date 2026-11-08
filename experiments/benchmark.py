@@ -36,12 +36,12 @@ class Sample:
     path: Path
     label: str
     group: str
-    member: str = ""
+    member: str
     vessel: str = ""
 
     @property
     def id(self):
-        return f"{self.path.name}:{self.member}" if self.member else f"{self.label}/{self.path.name}"
+        return f"{self.path.name}:{self.member}"
 
 
 @lru_cache(maxsize=32)
@@ -50,27 +50,17 @@ def scene_zip(path):
 
 
 def read_chip(sample):
-    if sample.member:
-        payload = scene_zip(sample.path).read(sample.member)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", NotGeoreferencedWarning)
-            with MemoryFile(payload) as memory, memory.open() as raster:
-                if raster.count != 4 or raster.dtypes != ("float32",) * 4:
-                    raise ValueError(f"{sample.id}: expected the original four-band SLC TIFF")
-                iq = raster.read([3, 4])
-        # OpenSARShip ReadMe §1.2.2 documents bands 3–4 as real and imaginary VV.
-        if not np.all((iq >= -32768) & (iq <= 32767) & (iq == np.rint(iq))):
-            raise ValueError(f"{sample.id}: I/Q values cannot be losslessly represented as int16")
-        return np.moveaxis(iq.astype(np.int16), 0, -1)
-    payload = sample.path.read_bytes()
-    header = payload[:4096]
-    def field(name):
-        return int(re.search(rb"(?m)^" + name + rb"\s*=\s*(\d+)", header)[1])
-    height, width = field(b"NumberOfRows"), field(b"NumberOfColumns")
-    magnitude, phase = np.frombuffer(
-        payload, dtype=">f4", count=2 * height * width, offset=field(b"PhoenixHeaderLength")
-    ).reshape(2, height, width).astype(np.float32)
-    return np.stack((magnitude * np.cos(phase), magnitude * np.sin(phase)), axis=-1)
+    payload = scene_zip(sample.path).read(sample.member)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", NotGeoreferencedWarning)
+        with MemoryFile(payload) as memory, memory.open() as raster:
+            if raster.count != 4 or raster.dtypes != ("float32",) * 4:
+                raise ValueError(f"{sample.id}: expected the original four-band SLC TIFF")
+            iq = raster.read([3, 4])
+    # OpenSARShip ReadMe §1.2.2 documents bands 3–4 as real and imaginary VV.
+    if not np.all((iq >= -32768) & (iq <= 32767) & (iq == np.rint(iq))):
+        raise ValueError(f"{sample.id}: I/Q values cannot be losslessly represented as int16")
+    return np.moveaxis(iq.astype(np.int16), 0, -1)
 
 
 def vessel_ids(archive):
@@ -90,13 +80,6 @@ def vessel_ids(archive):
 
 
 def inventory(args):
-    if args.dataset == "mstar":
-        return tuple([
-            Sample(path, path.parent.name, split)
-            for path in sorted((args.data[0] / split).glob("*/*"))
-            if path.is_file() and path.suffix[1:].isdigit()
-        ] for split in ("train", "test"))
-
     samples = []
     seen = set()
     for folder in args.data:
@@ -209,7 +192,7 @@ def synchronize(device):
 def paired_ci(pred, ref, truth, groups, seed):
     rng = np.random.default_rng(seed)
     diff = (pred == truth).astype(float) - (ref == truth)
-    units = [diff[groups == group] for group in np.unique(groups)] if groups is not None else diff[:, None]
+    units = [diff[groups == group] for group in np.unique(groups)]
     totals = np.array([unit.sum() for unit in units])
     counts = np.array([len(unit) for unit in units])
     draws = rng.integers(0, len(units), size=(3000, len(units)))
@@ -227,12 +210,11 @@ def run(args):
     if not train or {s.label for s in test} != set(classes):
         raise ValueError("Every class must occur in both splits")
     args.out.mkdir(parents=True, exist_ok=True)
-    if args.dataset == "opensar":
-        scene_files = sorted({sample.path for sample in train + test})
-        (args.out / "scene_archives.txt").write_text("".join(
-            f"{p.parent.name}/{p.name}\n" for p in scene_files
-        ))
-        print("Known vessel identities:", sum(bool(s.vessel) for s in train), sum(bool(s.vessel) for s in test), flush=True)
+    scene_files = sorted({sample.path for sample in train + test})
+    (args.out / "scene_archives.txt").write_text("".join(
+        f"{p.parent.name}/{p.name}\n" for p in scene_files
+    ))
+    print("Known vessel identities:", sum(bool(s.vessel) for s in train), sum(bool(s.vessel) for s in test), flush=True)
     samples = train + test
     print("Split:", len(train), len(test), Counter(s.label for s in train), Counter(s.label for s in test), flush=True)
     with (args.out / "split.csv").open("w", newline="") as file:
@@ -302,7 +284,7 @@ def run(args):
             stop = time.perf_counter_ns()
             times[method].append(((middle - start) / 1e6, (stop - start) / 1e6))
 
-    groups = np.array([s.group for s in test]) if args.dataset == "opensar" else None
+    groups = np.array([s.group for s in test])
     metrics = {}
     for method, pred in predictions.items():
         q50, q95 = np.percentile(times[method], [50, 95], axis=0)
@@ -332,7 +314,7 @@ def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset", choices=("mstar", "opensar"), required=True)
+    parser.add_argument("--dataset", choices=("opensar",), required=True)
     parser.add_argument("--data", type=Path, nargs="+", required=True)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--weights", type=Path, required=True)

@@ -48,11 +48,8 @@ def classification(args):
     archives = {path.name: path for folder in args.data for path in folder.glob("*.zip")}
     exports = {method: [] for method in METHODS}
     for index, row in enumerate(predictions, 1):
-        if dataset == "mstar":
-            sample = Sample(args.data[0] / "test" / row["id"], row["truth"], row["group"])
-        else:
-            archive, member = row["id"].split(":", 1)
-            sample = Sample(archives[archive], row["truth"], row["group"], member)
+        archive, member = row["id"].split(":", 1)
+        sample = Sample(archives[archive], row["truth"], row["group"], member)
         name = f"{index:05d}"
         for method, tensor in processor.all_features(read_chip(sample)).items():
             root = roots[method]
@@ -130,9 +127,9 @@ def detection(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset", choices=("mstar", "opensar", "insight"), required=True)
+    parser.add_argument("--dataset", choices=("opensar", "insight"), required=True)
     parser.add_argument("--data", type=Path, nargs="+", required=True,
-                        help="MSTAR complex root, OpenSARShip archive directories, or YOLO cache")
+                        help="OpenSARShip archive directories or YOLO cache")
     parser.add_argument("--results", type=Path, required=True, help="Parent directory of the benchmark results")
     parser.add_argument("--config", type=Path, default=Path("config.yaml"))
     parser.add_argument("--out", type=Path, default=Path("out"))
