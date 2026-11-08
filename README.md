@@ -41,12 +41,6 @@ Running this on Mac creates some issues, managed to bypass them adding ```(KMP_D
 python -m merlin_forge.bench --config config.yaml --input_dir path/to/dir --n 50
 ```
 
-## Todo
-
-- [ ] Test experiments and baseline comparison
-- [ ] Reduce inference time
-- [ ] Serve as a plug-and-play package
-
 ## References
 
 * **MERLIN Despeckling:** Y. Suo, Y. Wu, T. Miao, W. Diao, X. Sun and K. Fu, "Adaptive SAR Image Enhancement for Aircraft Detection via Speckle Suppression and Channel Combination," in IEEE Transactions on Geoscience and Remote Sensing, vol. 62, pp. 1-15, 2024, Art no. 5219415. DOI: 10.1109/TGRS.2024.3435881
