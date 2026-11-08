@@ -1,0 +1,4 @@
+-r requirements.txt
+tifffile==2026.3.3
+ultralytics==8.4.207
+zstandard==0.25.0

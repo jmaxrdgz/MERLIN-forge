@@ -1,0 +1,19 @@
+diff --git a/deepdespeckling/utils/load_cosar.py b/deepdespeckling/utils/load_cosar.py
+index 1e72ddf..0b4f5e7 100644
+--- a/deepdespeckling/utils/load_cosar.py
++++ b/deepdespeckling/utils/load_cosar.py
+@@ -1,5 +1,4 @@
+ import struct
+-from osgeo import gdal
+ import numpy as np
+ 
+ 
+@@ -68,6 +67,8 @@ def load_tiff_image(path_to_tiff_image: str) -> np.array:
+     Returns:
+         (numpy array): numpy array containing the tiff image
+     """
++    from osgeo import gdal
++
+     dataset = gdal.Open(path_to_tiff_image)
+ 
+     for x in range(1, dataset.RasterCount + 1):
