@@ -1,8 +1,8 @@
 # MERLIN-forge
 
-MERLIN-forge converts a single complex SAR SLC stored as `.npy` (shape `[H, W, 2]`, real/imag) into a 3-channel amplitude representation for downstream detection models. It computes amplitude once per sample and generates three channels: MERLIN-despeckled amplitude, weak-scatter enhancement, and strong-scatter enhancement.
+MERLIN-forge converts a single complex SAR SLC stored as `.npy` (shape `[H, W, 2]`, real/imag) into a 3-channel amplitude representation for downstream detection models. MERLIN uses the complex SLC's real and imaginary components to produce a despeckled amplitude channel. The weak- and strong-scatter enhancement branches share the magnitude computed from the original SLC.
 
-<img width="1408" height="768" alt="Gemini_Generated_Image_uc8ffzuc8ffzuc8f" src="https://github.com/user-attachments/assets/7d5a900c-93db-4280-b96f-04c659713a1e" />
+![MERLIN-forge pipeline. Complex SAR feeds MERLIN directly, and raw amplitude feeds the weak- and strong-scatter enhancement branches.](docs/merlin-forge-pipeline.png)
 
 This work is inspired from channel enhancement and combination (Suo et al., 2024) using Merlin (Dalsasso et al., 2022) as the despeckler for distribution and ease of use purposes. 
 
