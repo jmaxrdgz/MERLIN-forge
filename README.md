@@ -41,6 +41,38 @@ Running this on Mac creates some issues, managed to bypass them adding ```(KMP_D
 python -m merlin_forge.bench --config config.yaml --input_dir path/to/dir --n 50
 ```
 
+## Benchmark results
+
+We compared four three-channel inputs derived from the same complex SAR chips. The magnitude and MERLIN-only baselines repeat raw magnitude or MERLIN-despeckled amplitude across all three channels. The Gaussian control and MERLIN-forge share the same weak- and strong-scatter channels computed from raw magnitude. Their first channel uses Gaussian-smoothed magnitude or MERLIN-despeckled amplitude, respectively.
+
+### Classification
+
+Each method used a frozen ImageNet-pretrained ResNet-18 and a separately fitted logistic regression probe, with matched splits and training settings. OpenSARShip used a scene-based split (1,497 train, 780 test). MSTAR SOC used the standard 17° training and 15° test split (2,747 train, 2,425 test).
+
+| Dataset | Method | Accuracy % | Macro-F1 % |
+| --- | --- | ---: | ---: |
+| OpenSARShip | Magnitude | 69.1 | 33.1 |
+| OpenSARShip | Gaussian + scatter channels | 68.5 | 34.5 |
+| OpenSARShip | MERLIN only | 69.9 | 35.7 |
+| OpenSARShip | MERLIN-forge | **70.4** | **35.8** |
+| MSTAR SOC | Magnitude | **71.3** | **70.6** |
+| MSTAR SOC | Gaussian + scatter channels | 67.5 | 66.8 |
+| MSTAR SOC | MERLIN only | 36.5 | 33.5 |
+| MSTAR SOC | MERLIN-forge | 61.3 | 60.2 |
+
+### Vessel detection
+
+Each method fine-tuned YOLO11n for 10 epochs at 320×320 with the same initial weights, splits, and seed. The OpenSAR Insight evaluation used 196 held-out tiles from three scenes with 236 labeled boxes. Precision and recall are reported at each model's max-F1 operating point. The two F1 columns use fixed confidence thresholds and one-to-one matches at IoU ≥ 0.50.
+
+| Method | mAP50 % | mAP50–95 % | Precision % | Recall % | F1 @ 0.30 % | F1 @ 0.50 % |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Magnitude | **53.2** | **19.2** | **80.9** | 48.4 | 59.54 | **59.56** |
+| Gaussian + scatter channels | 48.2 | 15.6 | 74.3 | 47.0 | 57.45 | 54.70 |
+| MERLIN only | 50.9 | 17.5 | 69.2 | 49.5 | 57.75 | 50.00 |
+| MERLIN-forge | 50.3 | 16.1 | 73.8 | **52.5** | **60.87** | 57.53 |
+
+See the [experiment documentation](experiments/README.md) for the full protocol, uncertainty estimates, and reproduction commands.
+
 ## References
 
 * **MERLIN Despeckling:** Y. Suo, Y. Wu, T. Miao, W. Diao, X. Sun and K. Fu, "Adaptive SAR Image Enhancement for Aircraft Detection via Speckle Suppression and Channel Combination," in IEEE Transactions on Geoscience and Remote Sensing, vol. 62, pp. 1-15, 2024, Art no. 5219415. DOI: 10.1109/TGRS.2024.3435881
