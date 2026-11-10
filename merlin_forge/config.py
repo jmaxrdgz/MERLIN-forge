@@ -19,12 +19,6 @@ def load_config(path: str) -> Dict[str, Any]:
     return cfg
 
 
-def _require(cfg: Dict[str, Any], key: str, path: str) -> Any:
-    if key not in cfg:
-        raise ConfigError(f"Missing required config key: {path}.{key}")
-    return cfg[key]
-
-
 def _ensure_in(value: Any, allowed: Iterable[Any], path: str) -> Any:
     if value not in allowed:
         raise ConfigError(f"Invalid value for {path}: {value}. Allowed: {list(allowed)}")
@@ -89,7 +83,6 @@ def validate_config(cfg: Dict[str, Any]) -> None:
     bench_cfg = cfg.setdefault("bench", {})
     _ensure_type(bench_cfg, dict, "bench")
     bench_cfg.setdefault("warmup", 5)
-    bench_cfg.setdefault("iters", 50)
 
     # Basic sanity checks
     if input_cfg["expected_shape_last_dim"] != 2:

@@ -46,4 +46,3 @@ viz:
 
 bench:
   warmup: 5
-  iters: 50
