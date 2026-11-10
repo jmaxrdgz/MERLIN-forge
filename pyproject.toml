@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "merlin-forge"
+version = "0.1.0"
+description = "Three-channel SAR amplitude preprocessing with MERLIN despeckling"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "deepdespeckling==0.8",
+    "numpy",
+    "PyYAML",
+    "torch",
+]
+
+[project.optional-dependencies]
+viz = ["matplotlib"]
+bench = ["psutil"]
+
+[project.scripts]
+merlin-forge-viz = "merlin_forge.viz:main"
+merlin-forge-bench = "merlin_forge.bench:main"
+
+[project.urls]
+Repository = "https://github.com/jmaxrdgz/MERLIN-forge"
+
+[tool.setuptools.packages.find]
+include = ["merlin_forge", "merlin_forge.*"]

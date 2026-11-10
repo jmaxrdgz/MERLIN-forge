@@ -6,39 +6,34 @@ MERLIN-forge converts a single complex SAR SLC stored as `.npy` (shape `[H, W, 2
 
 This work is inspired from channel enhancement and combination (Suo et al., 2024) using Merlin (Dalsasso et al., 2022) as the despeckler for distribution and ease of use purposes. 
 
-## Setup
+## Installation
 
-1) Create and activate a conda environment (Python >= 3.10):
-
-```bash
-conda create -n merlin-forge python=3.10
-conda activate merlin-forge
-```
-
-2) Install dependencies (PyTorch and deepdespeckling included):
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and clone the repository. MERLIN-forge supports Python 3.10 and later. The setup below uses Python 3.11.
 
 ```bash
-conda install -y numpy scipy matplotlib scikit-image tqdm nomkl pyyaml
-pip install torch torchvision torchaudio
-
-git clone https://github.com/hi-paris/deepdespeckling.git
-cd deepdespeckling
-pip install -e .
+git clone https://github.com/jmaxrdgz/MERLIN-forge.git
+cd MERLIN-forge
+uv venv --python 3.11
 ```
+
+The upstream `deepdespeckling` package imports GDAL for a TIFF reader. For the `.npy` workflow, use the included patch to defer that import.
+
+```bash
+git clone https://github.com/hi-paris/deepdespeckling.git .venv/deepdespeckling
+git -C .venv/deepdespeckling checkout b9bf54a013933a8dbfa63d5e02cd5b0a7acd7efc
+git -C .venv/deepdespeckling apply "$PWD/experiments/deepdespeckling-lazy-gdal.patch"
+uv pip install '.[viz,bench]' .venv/deepdespeckling
+```
+
+If your environment already has the GDAL Python bindings, install directly from GitHub with `uv pip install 'merlin-forge[viz,bench] @ git+https://github.com/jmaxrdgz/MERLIN-forge.git'`. Use the repository's `config.yaml` or supply your own. The distribution name is `merlin-forge` and the Python import is `merlin_forge`.
 
 ## Quick start
 
-- Visualization:
+Render a sample and benchmark a folder of samples with the installed commands.
 
 ```bash
-python -m merlin_forge.viz --config config.yaml --input path/to/sample.npy --out out.png
-```
-Running this on Mac creates some issues, managed to bypass them adding ```(KMP_DUPLICATE_LIB_OK=TRUE if needed)```before command (not clean but does the job for now).
-
-- Benchmark:
-
-```bash
-python -m merlin_forge.bench --config config.yaml --input_dir path/to/dir --n 50
+uv run --no-sync merlin-forge-viz --config config.yaml --input path/to/sample.npy --out out.png
+uv run --no-sync merlin-forge-bench --config config.yaml --input_dir path/to/dir --n 50
 ```
 
 ## Benchmark results
