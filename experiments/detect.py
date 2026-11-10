@@ -112,8 +112,40 @@ def rgb8(tensor):
     return np.rint(tensor.cpu().numpy().transpose(1, 2, 0) * 255).astype(np.uint8)
 
 
+def validate_cache(args, inventory, pre, allow_new=False):
+    dataset_files = ["filtered.csv"] + [
+        f"{split}_{kind}.tar.zst" for split in SPLITS for kind in ("labels", "patches")
+    ]
+    source_root = Path(__file__).resolve().parent
+    source_files = [source_root / "benchmark.py", source_root / "detect.py"]
+    source_files += sorted((source_root.parent / "merlin_forge").rglob("*.py"))
+    fingerprints = {}
+    for path in [args.data / name for name in dataset_files] + source_files:
+        with path.open("rb") as source:
+            digest = hashlib.sha256()
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+        key = path.name if path.parent == args.data else str(path.relative_to(source_root.parent))
+        fingerprints[key] = digest.hexdigest()
+    metadata = dict(
+        config=pre.forge.cfg, chip_size=pre.size, merlin_device=args.merlin_device,
+        merlin_weights_sha256=pre.weights_sha256, fingerprints=fingerprints,
+        inventory={split: {key: dict(scene=scene, boxes=boxes)
+                           for key, (scene, boxes) in rows.items()}
+                   for split, rows in inventory.items()},
+    )
+    manifest = args.cache / "provenance.json"
+    if manifest.exists():
+        if json.loads(manifest.read_text()) != metadata:
+            raise ValueError("Cache provenance differs from this run; use a fresh --cache directory")
+    elif not allow_new or any((args.cache / method).exists() for method in METHODS):
+        raise ValueError("Cache has no provenance; use a fresh --cache directory and prepare it")
+    return metadata
+
+
 @torch.inference_mode()
 def prepare(args, inventory, pre):
+    metadata = validate_cache(args, inventory, pre, allow_new=True)
     args.cache.mkdir(parents=True, exist_ok=True)
     args.out.mkdir(parents=True, exist_ok=True)
     for method in METHODS:
@@ -138,16 +170,26 @@ def prepare(args, inventory, pre):
                 for method, image in pre.all_features(iq).items():
                     if not torch.isfinite(image).all():
                         raise ValueError(f"{method} produced non-finite pixels for {key}")
-                    Image.fromarray(rgb8(image)).save(args.cache / method / "images" / split / f"{key}.png")
-                    boxes = rows[key][1]
-                    (args.cache / method / "labels" / split / f"{key}.txt").write_text("\n".join(boxes))
+                    image_path = args.cache / method / "images" / split / f"{key}.png"
+                    image_tmp = image_path.with_suffix(".tmp.png")
+                    Image.fromarray(rgb8(image)).save(image_tmp)
+                    image_tmp.replace(image_path)
+                    label_path = args.cache / method / "labels" / split / f"{key}.txt"
+                    label_tmp = label_path.with_suffix(".tmp.txt")
+                    label_tmp.write_text("\n".join(rows[key][1]))
+                    label_tmp.replace(label_path)
             if i % 20 == 0 or i == len(rows):
                 print(f"Prepared {split}: {i}/{len(rows)}", flush=True)
         if found != set(rows):
             raise ValueError(f"Missing {split} SLC patches: {sorted(set(rows) - found)}")
 
+    manifest_tmp = args.cache / "provenance.tmp.json"
+    manifest_tmp.write_text(json.dumps(metadata, sort_keys=True, indent=2) + "\n")
+    manifest_tmp.replace(args.cache / "provenance.json")
+
 
 def fit(args, inventory, pre):
+    provenance = validate_cache(args, inventory, pre)
     os.environ.setdefault("YOLO_CONFIG_DIR", str((args.cache / "yolo-config").resolve()))
     from ultralytics import YOLO, settings
     settings.update({"sync": False})
@@ -155,6 +197,7 @@ def fit(args, inventory, pre):
         seed=args.seed, epochs=args.epochs, imgsz=args.imgsz, batch=args.batch,
         torch_threads=args.threads, merlin_device=args.merlin_device, yolo_device=args.yolo_device,
         merlin_weights_sha256=pre.weights_sha256,
+        cache_provenance=provenance,
         yolo_initial_weights_sha256=hashlib.sha256(args.weights.read_bytes()).hexdigest(),
         subsets={split: dict(images=len(rows), boxes=sum(len(boxes) for _, boxes in rows.values()),
                             scenes=sorted({scene for scene, _ in rows.values()}))

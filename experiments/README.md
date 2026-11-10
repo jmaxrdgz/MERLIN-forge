@@ -102,6 +102,8 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 python detect.py --data data/insight --config "$cf
   --merlin-device mps --yolo-device mps --epochs 10 --imgsz 320 --batch 12
 ```
 
+Detection caches include a provenance manifest with hashes of the dataset files, preprocessing code, configuration, and MERLIN checkpoint. Preparation, training, and evaluation reject a cache when those inputs differ. Use a fresh `--cache` directory for changed inputs or for caches created before provenance tracking. Hashing reads the source archives during validation.
+
 The dependency patch makes GDAL’s Python binding a lazy import for an unused TIFF loader. MERLIN inference and weights remain upstream. The benchmark reads the SAR imagery with Rasterio or tifffile. [MERLIN paper](https://doi.org/10.1109/TGRS.2021.3128621) · [deepdespeckling source](https://github.com/hi-paris/deepdespeckling/tree/b9bf54a013933a8dbfa63d5e02cd5b0a7acd7efc)
 
 ## Held-out inference exports
