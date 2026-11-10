@@ -163,7 +163,7 @@ class MerlinDenoiserAdapter:
             except Exception as exc:
                 raise ConfigError("Merlin output could not be converted to torch.Tensor") from exc
 
-        while out.ndim > 2:
+        while out.ndim > 2 and out.shape[0] == 1:
             out = out.squeeze(0)
         if out.ndim != 2:
             raise ConfigError(f"Merlin output must be 2D [H,W], got shape {tuple(out.shape)}")
